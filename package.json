@@ -1,0 +1,26 @@
+{
+  "name": "loop-engineering-playbook",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "loop": "node .claude/loop/loop.mjs",
+    "loop:dry": "node .claude/loop/loop.mjs --dry",
+    "loop:compose": "node .claude/loop/loop.mjs --compose",
+    "loop:stop": "node -e \"require('fs').writeFileSync('.claude/loop/STOP','')\""
+  },
+  "keywords": [],
+  "author": "週末ものづくり部 (https://x.com/shumatsumonobu)",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.8",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.8"
+  }
+}

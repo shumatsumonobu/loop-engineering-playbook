@@ -1,0 +1,11 @@
+node_modules/
+.env
+coverage/
+*.log
+
+# ループの制御・一時ファイル（.claude/loop/ に生成。場所が変わっても無視できるよう名前だけで指定。loop.log は上の *.log で無視される）
+STOP
+verdict.json
+
+# 内輪の作業メモ（公開リポには入れない。公開は README/HARNESS ＋ .claude/ ＋ 題材アプリ）
+WIP.md
