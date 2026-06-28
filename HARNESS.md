@@ -53,6 +53,20 @@ flowchart TD
 - **客観ゲート**: コミットの是非は loop.mjs が「**テスト緑＋意味ある変更**（composition なら＋Verifier 合格）」で判定する（エージェントの自己申告で決めない）。詳細は §4。
 - **baseline / composition**: Verifier ゲート（E〜H）を抜いた素のループが baseline、Verifier を足したのが composition（`--compose`）。Stop フック（客観フロア）は両モードで効く。
 
+### 用語の対応（Loop Engineering の語彙）
+
+この土台を業界語（Loop Engineering — [Addy Osmani](https://addyosmani.com/blog/loop-engineering/) / [Cobus Greyling](https://github.com/cobusgreyling/loop-engineering) が広めた概念）に対応づけると、位置づけが明確になる。本リポはその語彙でいう **harness と loop の両方**を、開発特化・客観ゲート付きで実装した最小例。
+
+| このリポ | Loop Engineering の語彙 |
+|---|---|
+| `.claude/` 一式（loop.mjs / Stop フック / verifier） | **harness**（単一セッションの実行環境）。このファイル名 HARNESS.md もこの区別に由来 |
+| 反復で回す仕組み全体（harness ＋ schedule ＋ state ＋ verification） | **loop**（recursive goal：目標を定め、合格か人間への引き継ぎまで自走） |
+| Implementer と Verifier を別文脈に分離 | **maker / checker split**（code agent orchestra・実装役は自分の答案を採点しない） |
+| テスト緑＋意味ある変更でのみコミット | **objective gate / adversarial verification** |
+| `.claude/loop/TASKS.md` ＋ git ＋ テスト | **external state / memory**（会話の外に置く永続的な背骨） |
+
+**成熟度**: 報告・提案どまり（L1）の運用ループが多い中で、このテンプレは**無人で実装まで進めて客観ゲートで自動コミットする L2〜L3 寄り**。客観ゲートが綺麗に効くソフト開発に絞ることで、無人実装まで踏み込んでいる。
+
 ## 1. 目的とスコープ
 
 **実際に使える「自前ループ機構」を作る** — Claude をタスクごとに自走させ、安全に止まる Node スクリプト（`.claude/loop/loop.mjs`）。
