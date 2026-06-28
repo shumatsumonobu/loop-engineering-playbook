@@ -1,5 +1,5 @@
 // 自前ループ機構（Ralph loop + 客観ゲート + ガードレール）
-// claude -p を1タスクずつ実行し、.claude/loop/TASKS.md が空になるまで回す。コミットはこのスクリプトが行う。
+// claude -p を1タスクずつ実行し、.claude/loop/BACKLOG.md が空になるまで回す。コミットはこのスクリプトが行う。
 // 実行はリポルートから: npm run loop （= node .claude/loop/loop.mjs。パスはリポルート相対なので cwd=リポルート前提）
 // 試走: npm run loop:dry （claude を呼ばず・コミットせず挙動だけ確認）
 // 合成版: npm run loop -- --compose （Verifier サブエージェント＋verdict.json でゲート）
@@ -17,7 +17,7 @@ const TOTAL_LIMIT_MS = 1800000;  // 総量上限（最後の砦）。30分
 // パスはすべてリポルート相対（npm run loop で cwd=リポルートになる前提）。
 // ハーネスの状態/ログは .claude/loop/ にまとめる（リポ直下 = 開発ソースと分離する方針）。
 const LOOP_DIR = ".claude/loop";
-const TASKS = `${LOOP_DIR}/TASKS.md`;        // タスク待ち行列＋進捗
+const BACKLOG = `${LOOP_DIR}/BACKLOG.md`;     // タスク待ち行列＋進捗
 const LOG = `${LOOP_DIR}/loop.log`;           // 実行ログ
 const VERDICT = `${LOOP_DIR}/verdict.json`;   // Verifier 判定
 const STOP = `${LOOP_DIR}/STOP`;              // 安全停止センチネル
@@ -27,10 +27,10 @@ const DRY_RUN = process.env.LOOP_DRY_RUN === "1" || process.argv.includes("--dry
 
 // 共通プレフィックス（baseline/composition 両方）。「自己検証→改善」と「コミットしない」を必ず含める。
 const PROMPT_COMMON =
-  `CLAUDE.md の作業手順に従い、${TASKS} の「次にやること」から先頭タスクを1つ実装する。` +
+  `CLAUDE.md の作業手順に従い、${BACKLOG} の「次にやること」から先頭タスクを1つ実装する。` +
   "実装は src/ 配下、テストは tests/ 配下に置く。" +
   "実装したらテストを実行し、緑になるまで自分で直す。" +
-  `完了したら ${TASKS} を更新する（完了へ移動・調査メモに知見を残す）。` +
+  `完了したら ${BACKLOG} を更新する（完了へ移動・調査メモに知見を残す）。` +
   "ただしコミットはしない（CLAUDE.md 手順6 は実行しない。コミットはスクリプトが行う）。";
 // composition 固有: verifier を呼び、自己検証→改善を合格まで回し、判定を verdict へ書かせる。
 const PROMPT_COMPOSE =
@@ -78,11 +78,11 @@ const runVitest = () =>
         timeout: 120000,
       }).status === 0;
 
-// TASKS.md の「次にやること」に "-" 始まりの行が残っているか
+// BACKLOG.md の「次にやること」に "-" 始まりの行が残っているか
 const hasRemainingTasks = () => {
-  if (!existsSync(TASKS)) return false;
+  if (!existsSync(BACKLOG)) return false;
   let inSection = false;
-  for (const line of readFileSync(TASKS, "utf8").split(/\r?\n/)) {
+  for (const line of readFileSync(BACKLOG, "utf8").split(/\r?\n/)) {
     if (line.includes("次にやること")) { inSection = true; continue; }
     if (inSection) {
       if (line.startsWith("##")) break;
@@ -132,7 +132,7 @@ while (true) {
   // 総量上限（最後の砦）
   if (Date.now() - startTime > TOTAL_LIMIT_MS) { log("[停止] 総量上限（時間）到達"); break; }
 
-  // 完了判定は claude 実行前（残タスク無し→緑＋カバレッジ確認→終了。空 TASKS.md で無駄に走らせない）
+  // 完了判定は claude 実行前（残タスク無し→緑＋カバレッジ確認→終了。空 BACKLOG.md で無駄に走らせない）
   if (!hasRemainingTasks()) {
     // 完了時は test:coverage を1回回し、テスト緑＋カバレッジ80%（vitest.config 閾値）を客観確認する
     // （これで baseline/composition どちらでも最終カバレッジが担保される）
@@ -229,13 +229,13 @@ while (true) {
       noChange = 0;
     } else {
       // 指定パスだけをコミット（他に staged 変更があっても巻き込まない）。add で新規ファイルも stage。
-      const add = gitRun("add", "src", "tests", TASKS);
+      const add = gitRun("add", "src", "tests", BACKLOG);
       if (!add.ok) {
         // add 失敗のまま commit すると新規ファイルを取りこぼすので、この周回はコミットしない。
         failCount += 1;
         log(`[失敗] git add 失敗 (${failCount}/${FAIL_LIMIT}): ${add.stderr}`);
       } else {
-        const c = spawnSync("git", ["commit", "-m", `自動ループ: 周回${iteration} の実装`, "--", "src", "tests", TASKS], { encoding: "utf8" });
+        const c = spawnSync("git", ["commit", "-m", `自動ループ: 周回${iteration} の実装`, "--", "src", "tests", BACKLOG], { encoding: "utf8" });
         if (c.status === 0) {
           appendFileSync(LOG, "変更ファイル:\n" + git("show", "--stat", "--format=", "HEAD") + "\n\n");
           log("[コミット] 緑＋意味ある変更＋合格でコミット");

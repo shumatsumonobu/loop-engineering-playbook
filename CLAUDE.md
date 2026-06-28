@@ -14,11 +14,11 @@ Express のタスク管理API。ポート3001。
 - コミットメッセージに著者表記（`Co-Authored-By` など Claude/Anthropic の表記）を絶対に入れない
 
 ## 作業手順
-1. .claude/loop/TASKS.md を読んで、前回の状態を把握する
+1. .claude/loop/BACKLOG.md を読んで、前回の状態を把握する
 2. 「次にやること」の一番上のタスクを1つ選ぶ
 3. 実装する
 4. テストを書いて通ることを確認する（npx vitest run）
-5. .claude/loop/TASKS.md を更新する（完了に移動、調査メモに知見を残す）
+5. .claude/loop/BACKLOG.md を更新する（完了に移動、調査メモに知見を残す）
 6. 変更をコミットする（コミット規約に従う）
    ※ ループ実行（.claude/loop/loop.mjs）から呼ばれた場合は、この手順6は行わない（コミットはスクリプトが行う）。
 
@@ -31,5 +31,5 @@ Express のタスク管理API。ポート3001。
 | 作業手順・コーディング/コミット規約 | この CLAUDE.md |
 | ハーネス（loop/Stop フック/verifier）の設計・拡張 | [HARNESS.md](HARNESS.md) |
 | 使い方（npm run loop ...）・前提・全体フロー | [README.md](README.md) |
-| タスク待ち行列＋作業状態（機械が読み書きする別レイヤ） | .claude/loop/TASKS.md |
+| タスク待ち行列＋作業状態（機械が読み書きする別レイヤ） | .claude/loop/BACKLOG.md |
 | 進捗・内部メタ（リポ情報/公開手順/未決定） | WIP.md（内部・公開リポには含めない） |
