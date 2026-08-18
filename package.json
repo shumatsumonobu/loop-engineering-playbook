@@ -1,0 +1,9 @@
+{
+  "name": "loop-engineering-playbook",
+  "version": "2.0.0",
+  "description": "人が毎回レビューしなくても信用できる、AIにコードを書かせ続けるループ（ループエンジニアリング）の playbook",
+  "type": "module",
+  "author": "週末ものづくり部 (https://x.com/shumatsumonobu)",
+  "license": "MIT",
+  "repository": "github:shumatsumonobu/loop-engineering-playbook"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "sample-python-pytest",
+  "private": true,
+  "scripts": {
+    "test": "python -m pytest -q"
+  }
+}
