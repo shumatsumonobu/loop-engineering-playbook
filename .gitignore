@@ -1,0 +1,15 @@
+node_modules/
+.env
+coverage/
+*.log
+
+# 内輪の作業メモ（公開リポジトリには入れない）
+WIP.md
+
+# ツールの作業キャッシュ（serena MCP）
+.serena/
+
+# Claude Code の設定（ローカルの絶対パスや個人の許可設定が入る）
+# .claude/ の他のもの（rules など）は git 管理に含める
+.claude/settings.json
+.claude/settings.local.json

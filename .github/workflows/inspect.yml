@@ -1,0 +1,28 @@
+# ドキュメントの自動検査を push と pull request で回す
+#
+# なぜ要るか: このリポジトリは「人がレビューしなくても信用できるようにゲートが判定する」と主張している、
+#   その主張を持つ側のドキュメントが手で打った時しか検査されないのは筋が通らない
+#   中身の正しさ（主張が実物と合っているか）は検査では分からない、それは .claude/rules/ の基準で人が見る
+#
+# 依存のインストールは要らない ── このリポジトリの package.json は依存もスクリプトも持たない
+
+name: inspect
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 20 以上 ── 検査スクリプトが import.meta.dirname を使う
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # exit 0 が合格、落ちた項目だけ理由が出る
+      - run: node .claude/scripts/inspect.mjs

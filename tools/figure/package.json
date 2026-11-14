@@ -1,0 +1,9 @@
+{
+  "name": "loop-engineering-playbook-figure",
+  "private": true,
+  "description": "README の図の HTML を PNG に描き出す道具（このリポジトリを保守する時だけ使う）",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.59.1"
+  }
+}

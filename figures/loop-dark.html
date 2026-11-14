@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>1タスクの流れ（黒地）</title>
+<!--
+  README に出す図（黒地）。中身は loop.html そのもの
+  loop.html を #dark 付きで読み込むだけ（配色の切り替えは loop.html の .dark が持つ）
+  中身を複製しないので、loop.html を直したらこのファイルは触らずに描き出し直すだけでよい
+-->
+<style>
+  html, body { margin: 0; background: #111111; }
+  .page { position: relative; width: 1920px; height: 1500px; background: #111111; overflow: hidden; }
+  iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1500px; border: 0; }
+</style>
+</head>
+<body>
+<div class="page"><iframe src="loop.html#dark" scrolling="no"></iframe></div>
+</body>
+</html>

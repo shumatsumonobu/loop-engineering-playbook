@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>1タスクの流れ</title>
+<!--
+  README の「1タスクの流れ」の図。流れの出典は harness/integrated.mjs の doTask と mergeToMain
+  意図: 売りは「AI が書いたものを、ゲートが判定する」。1タスクがどこを通り、どこで不合格になり、どこへ戻るかを線の通り道で見せる
+  部品ごとの理由:
+    見出し — 「AI が書き、」を朱、「ゲートが判定する」を黒で1行に置く。見出しがそのまま色の凡例になる
+    本線 — 担当から合格までを左から右への1本の線にする
+    駅 — AI が書く所（テスト・実装）は朱の小さい駅で、名前を線の下に置く。ハーネスが記録するだけの所は黒の小さい駅
+    ゲート — 不合格にする所なので、線を横切る太い棒（遮断機）にし、ほかの駅より大きくする。名前は線の上
+    ② 凍結 — README の表では記録と判定の2つで1つのゲートなので、2つの駅を括弧でまとめる
+    全テスト緑 — README の表のゲートではないので番号を付けない
+    戻り線 — どの判定で不合格になっても、巻き戻してテストから書き直す。落ちる線を下の1本に集め、テストの駅の手前へ戻す
+    差し戻し — 回数の上限に達した線と、変異チェックが機能しない時の線を、1本にまとめて外へ出す
+    番号 — ゲートの①②③だけ付ける。README の表と対応させるため
+    線 — 本線 10px、戻り線と枝 6px。絵・影・光の輪・文字の地の色は付けない
+  色: 黒 #000000 と朱 #C2410C の2色だけ。朱は AI にだけ使う。地は白の1色
+  文字: Noto Sans JP。見出し・ゲートの名前 900、駅の名前 700、それ以外 500。約物を詰める（palt）
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #ffffff; }
+  .page { position: relative; width: 1920px; height: 1500px; background: #ffffff; font-family: "Noto Sans JP", sans-serif; }
+  svg { display: block; font-family: "Noto Sans JP", sans-serif; font-feature-settings: "palt"; }
+  text { fill: #000000; font-weight: 500; }
+  .ai { fill: #C2410C; }
+  .kicker { font-size: 28px; font-weight: 700; }
+  .head { font-size: 100px; font-weight: 900; letter-spacing: -0.03em; }
+  .sub { font-size: 30px; }
+  .start-a { font-size: 34px; font-weight: 900; }
+  .start-b { font-size: 26px; font-weight: 700; }
+  .st { font-size: 32px; font-weight: 700; }
+  .gate { font-size: 36px; font-weight: 900; }
+  .note { font-size: 26px; }
+  .out { font-size: 40px; font-weight: 900; }
+  .edge { font-size: 26px; font-weight: 900; paint-order: stroke; stroke: #ffffff; stroke-width: 12px; stroke-linejoin: round; }
+  .side-h { font-size: 28px; font-weight: 900; }
+  .side { font-size: 26px; }
+  /* 黒地（URL に #dark を付けた時だけ・OGP 用）── 地 #111111、黒 → 白、朱 → #FB923C（黒地で沈まない明るさ）。2色の決まりは同じ */
+  .dark body, .dark .page { background: #111111; }
+  .dark text { fill: #ffffff; }
+  .dark .ai { fill: #FB923C; }
+  .dark .edge { stroke: #111111; }
+  .dark [stroke="#000000"] { stroke: #ffffff; }
+  .dark [fill="#000000"] { fill: #ffffff; }
+  .dark [fill="#C2410C"] { fill: #FB923C; }
+</style>
+<script>if (location.hash === "#dark") document.documentElement.classList.add("dark");</script>
+</head>
+<body>
+<div class="page">
+<svg width="1920" height="1500" viewBox="0 0 1920 1500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="ink" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#000000"/></marker>
+    <marker id="ink-s" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#000000"/></marker>
+  </defs>
+
+  <!-- 見出し: 色の凡例を兼ねる -->
+  <text class="kicker" x="72" y="68">1タスクの流れ</text>
+  <text class="head" x="66" y="178"><tspan class="ai">AI が書き、</tspan>ゲートが判定する</text>
+  <text class="sub" x="72" y="232">タスクの文章を1つ渡すと、すべての判定に合格した成果物だけをハーネスがコミットする</text>
+
+  <!-- 起点 -->
+  <text class="start-a" x="72" y="310">タスクを1件 担当</text>
+  <text class="start-b" x="72" y="348">ハーネスが beads（bd）で割り当て</text>
+
+  <!-- 本線 -->
+  <path d="M80,546 V594" stroke="#000000" stroke-width="6"/>
+  <path d="M80,570 H1636" stroke="#000000" stroke-width="10" fill="none" marker-end="url(#ink)"/>
+
+  <!-- AI が書く駅（朱・名前は線の下） -->
+  <rect x="294" y="546" width="12" height="48" fill="#C2410C"/>
+  <text class="st ai" x="300" y="650" text-anchor="middle">テストだけ書く</text>
+  <text class="note" x="300" y="688" text-anchor="middle">書き込み先は</text>
+  <text class="note" x="300" y="722" text-anchor="middle">tests/ だけ</text>
+  <rect x="854" y="546" width="12" height="48" fill="#C2410C"/>
+  <text class="st ai" x="860" y="650" text-anchor="middle">実装を書く</text>
+  <text class="note" x="860" y="688" text-anchor="middle">書き込み先は</text>
+  <text class="note" x="860" y="722" text-anchor="middle">src/（既定）だけ</text>
+
+  <!-- ① 赤先行 -->
+  <rect x="468" y="518" width="24" height="104" fill="#000000"/>
+  <text class="gate" x="480" y="414" text-anchor="middle">① 赤先行</text>
+  <text class="note" x="480" y="454" text-anchor="middle">実装が無い状態で</text>
+  <text class="note" x="480" y="488" text-anchor="middle">赤になるか</text>
+
+  <!-- ② 凍結: 記録（駅）と判定（ゲート）を括弧でまとめる -->
+  <path d="M730,374 V360 H1000 V374" stroke="#000000" stroke-width="3" fill="none"/>
+  <text class="gate" x="865" y="342" text-anchor="middle">② 凍結</text>
+  <rect x="724" y="546" width="12" height="48" fill="#000000"/>
+  <text class="st" x="730" y="414" text-anchor="middle">記録</text>
+  <text class="note" x="730" y="454" text-anchor="middle">tests/ 全体の</text>
+  <text class="note" x="730" y="488" text-anchor="middle">内容を記録</text>
+  <rect x="988" y="518" width="24" height="104" fill="#000000"/>
+  <text class="st" x="1000" y="414" text-anchor="middle">判定</text>
+  <text class="note" x="1000" y="454" text-anchor="middle">記録と比べて</text>
+  <text class="note" x="1000" y="488" text-anchor="middle">書き換えが無いか</text>
+
+  <!-- 全テスト緑（README の表のゲートではないので番号なし） -->
+  <rect x="1238" y="518" width="24" height="104" fill="#000000"/>
+  <text class="gate" x="1250" y="414" text-anchor="middle">全テスト緑</text>
+  <text class="note" x="1250" y="454" text-anchor="middle">実装の後に</text>
+  <text class="note" x="1250" y="488" text-anchor="middle">全テストを実行</text>
+
+  <!-- ③ 変異チェック -->
+  <rect x="1508" y="518" width="24" height="104" fill="#000000"/>
+  <text class="gate" x="1520" y="414" text-anchor="middle">③ 変異チェック</text>
+  <text class="note" x="1520" y="454" text-anchor="middle">実装を壊して</text>
+  <text class="note" x="1520" y="488" text-anchor="middle">テストが検出するか</text>
+
+  <!-- 合格 -->
+  <text class="out" x="1664" y="584">合格</text>
+  <text class="note" x="1664" y="624">ハーネスがコミット</text>
+  <text class="note" x="1664" y="658">タスクを完了</text>
+  <text class="note" x="1664" y="692">→ 次のタスクへ</text>
+
+  <!-- 戻り線: どの判定で不合格になっても、巻き戻してテストから書き直す -->
+  <path d="M480,622 V880" stroke="#000000" stroke-width="6" fill="none"/>
+  <path d="M1000,622 V880" stroke="#000000" stroke-width="6" fill="none"/>
+  <path d="M1250,622 V880" stroke="#000000" stroke-width="6" fill="none"/>
+  <path d="M1520,622 V860 Q1520,880 1500,880 H190 Q170,880 170,860 V592" stroke="#000000" stroke-width="6" fill="none" stroke-linejoin="round" marker-end="url(#ink-s)"/>
+  <text class="note" x="740" y="846" text-anchor="middle">巻き戻す前に、成果物と判定の出力を保存</text>
+  <text class="edge" x="740" y="889" text-anchor="middle">不合格 → 巻き戻して、テストから書き直し</text>
+  <text class="edge" x="1500" y="770" text-anchor="end">検出されなかった</text>
+  <text class="edge" x="1500" y="804" text-anchor="end">壊し方を伝える</text>
+
+  <!-- 差し戻し: 回数の上限に達した線と、変異チェックが機能しない線を1本にまとめる -->
+  <path d="M380,880 V1020 Q380,1040 360,1040" stroke="#000000" stroke-width="6" fill="none"/>
+  <path d="M1532,604 H1600 Q1620,604 1620,624 V1020 Q1620,1040 1600,1040 H112" stroke="#000000" stroke-width="6" fill="none" stroke-linejoin="round" marker-end="url(#ink-s)"/>
+  <text class="note" x="404" y="960">3回で合格しなければ、担当からやり直し</text>
+  <text class="note" x="404" y="994">2周で合格しなければ差し戻し（最大6回）</text>
+  <text class="edge" x="1000" y="1049" text-anchor="middle">変異チェックが機能しない（変異が0個・ツールの異常）</text>
+  <text class="out" x="72" y="1110">人に差し戻し</text>
+  <text class="note" x="72" y="1148">ラベル blocked-for-human を付ける</text>
+  <text class="note" x="72" y="1182">ワーカーが起動しない場合も差し戻し</text>
+  <text class="note" x="72" y="1216">ループは止めずに次のタスクへ</text>
+
+  <!-- 下: ワーカーの実行後・そのほかの不合格・並列・統合・費用 -->
+  <path d="M72,1268 H1848" stroke="#000000" stroke-width="1.5"/>
+  <text class="side-h" x="72" y="1318">ワーカーの実行後</text>
+  <text class="side" x="72" y="1356">コミットを取り消す</text>
+  <text class="side" x="72" y="1390">閉じたタスクを開け直す</text>
+  <text class="side" x="72" y="1424">書き込み先の外を元に戻す</text>
+  <text class="side-h" x="440" y="1318">そのほかの不合格</text>
+  <text class="side" x="440" y="1356">テストの段階で実装を書いた</text>
+  <text class="side" x="440" y="1390">テストが無い・実装が無い</text>
+  <text class="side" x="440" y="1424">Stryker disable の印を書いた</text>
+  <text class="side-h" x="840" y="1318">並列</text>
+  <text class="side" x="840" y="1356">ワーカーごとに別の作業コピー</text>
+  <text class="side" x="840" y="1390">（git worktree）</text>
+  <text class="side" x="840" y="1424">1つのタスクを担当する</text>
+  <text class="side" x="840" y="1458">ワーカーは1つだけ</text>
+  <text class="side-h" x="1220" y="1318">統合</text>
+  <text class="side" x="1220" y="1356">全ワーカーの終了後に1本ずつ</text>
+  <text class="side" x="1220" y="1390">全テスト緑 → 採用</text>
+  <text class="side" x="1220" y="1424">赤・衝突 → 巻き戻し</text>
+  <text class="side" x="1220" y="1458">元のブランチが赤なら中止</text>
+  <text class="side-h" x="1600" y="1318">費用（実測）</text>
+  <text class="side" x="1600" y="1356">合格した10回</text>
+  <text class="side" x="1600" y="1390">$0.41〜$1.43</text>
+  <text class="side" x="1600" y="1424">最も高い回 $6.74</text>
+  <text class="side" x="1600" y="1458">（人に差し戻し）</text>
+</svg>
+</div>
+</body>
+</html>
